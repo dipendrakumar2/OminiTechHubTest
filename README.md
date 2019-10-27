@@ -1,7 +1,7 @@
 # OminiTechHubTest
 
 Steps to initialize and run the project:-
-Clone the project localy 
+Clone the project localy git clone 
 go to root directory
 make writable permission to storage directory.
 run command php artisan read:readdirectory to check 1 - Write a small PHP command line application to read the file /etc/dictionary and sort in alphabetical order.
