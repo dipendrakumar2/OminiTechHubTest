@@ -1,0 +1,13 @@
+<div style="margin-bottom:20px; font-family:monospace;">
+                            <button  data-toggle="modal" data-target="#exampleModalLong" class="au-btn au-btn-icon au-btn--green au-btn--small newJoinee" data-id="0"><i class="zmdi zmdi-accounts-add"></i> New Joined (<?php echo $this->data['newusers']; ?>)</button>
+                            <button class="au-btn au-btn-icon au-btn--red au-btn--small"><i class="zmdi zmdi-close"></i> Rejected (<?php echo $this->data['rejectedusers']; ?>)</button>                                    
+                        </div>  
+						
+						
+						
+						<td colspan="3">
+                                                        <button type="button"  data-toggle="modal" data-target="#exampleModalLong" class="btn btn-success btn-sm m-0 newJoinee" data-id="0"><span class="fas fa-gem"> New Joined (<?php echo $this->data['newusers']; ?>)</span></button>
+                                                    </td>
+                                                    <td colspan="13">
+                                                        <button type="button" class="btn btn-danger btn-sm m-0"><span class="fas fa-close"> Rejected (<?php echo $this->data['rejectedusers']; ?>)</span></button>
+                                                    </td>

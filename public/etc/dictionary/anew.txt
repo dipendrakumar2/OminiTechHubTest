@@ -1,0 +1,13 @@
+CI LEVEL SYSTEM
+Each CI will be assigned to a level at a time of CI Approval by Campaign Manager
+We should be able to see the followers, Engagement rate, average videos views for the last five videos
+Profile  (Done)
+Notification:
+
+
+•CI gets assigned to a level
+•CI level changes , up or down
+
+1. Campaign Manager shoud be able to see and approve the video   
+2. Crawl the performance data  of all the links 
+ 

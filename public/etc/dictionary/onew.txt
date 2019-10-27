@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `user_staus` BOOLEAN NOT NULL DEFAULT FALSE COMMENT '\'0\'=> \'new\",\'1\'=> \'approve\',\'2\'=>\'rejected\'' AFTER `user_code`; 

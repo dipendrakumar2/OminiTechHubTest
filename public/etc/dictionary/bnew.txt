@@ -1,0 +1,52 @@
+ALTER TABLE `applied_task_criteria_info` ADD INDEX(`applied_task_id`); 
+ALTER TABLE `applied_task_criteria_info` ADD INDEX(`user_id`); 
+ALTER TABLE `applied_task_criteria_info` ADD INDEX(`platform_id`); 
+ALTER TABLE `applied_task_criteria_info` ADD INDEX(`task_id`); 
+
+ALTER TABLE `applied_task_criteria_info` ADD FOREIGN KEY (`applied_task_id`) REFERENCES `applied_tasks`(`id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE `applied_task_criteria_info` ADD FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`) ON DELETE NO ACTION ON UPDATE NO ACTION; 
+ALTER TABLE `applied_task_criteria_info` ADD FOREIGN KEY (`platform_id`) REFERENCES `platforms`(`id`) ON DELETE NO ACTION ON UPDATE NO ACTION; 
+ALTER TABLE `applied_task_criteria_info` ADD FOREIGN KEY (`task_id`) REFERENCES `tasks`(`id`) ON DELETE NO ACTION ON UPDATE NO ACTION; 
+
+
+We are trying to build a learning platform for influencers, where we are training people to become a right influencer.
+
+https://www.instagram.com/developer/register/
+
+CREATE TABLE `user_campaign_daily_stats` (
+ `user_id` int(11) NOT NULL,
+ `post_id` int(11) NOT NULL,
+ `date` date NOT NULL,
+ `platform_id` int(11) NOT NULL,
+ `campaign_id` int(11) DEFAULT NULL,
+ `likes` int(11) DEFAULT NULL,
+ `followers` int(11) DEFAULT NULL,
+ `views` int(11) DEFAULT NULL,
+ `comments` int(11) DEFAULT NULL,
+ `dislikes` int(11) DEFAULT NULL,
+ KEY `user_id` (`user_id`),
+ KEY `post_id` (`post_id`),
+ KEY `platform_id` (`platform_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1
+
+
+use chamko;
+select * from users_bank_info where user_id();
+select * from users where mobile_number='7988318005';
+select * from users where mobile_number='7903484843';
+select * from users_otp where mobile_number='7988318005';
+CREATE TABLE `user_campaign_daily_stats` (
+ `user_id` int(11) NOT NULL,
+ `post_id` int(11) NOT NULL,
+ `date` date NOT NULL,
+ `platform_id` int(11) NOT NULL,
+ `campaign_id` int(11) DEFAULT NULL,
+ `likes` int(11) DEFAULT NULL,
+ `followers` int(11) DEFAULT NULL,
+ `views` int(11) DEFAULT NULL,
+ `comments` int(11) DEFAULT NULL,
+ `dislikes` int(11) DEFAULT NULL,
+ KEY `user_id` (`user_id`),
+ KEY `post_id` (`post_id`),
+ KEY `platform_id` (`platform_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1

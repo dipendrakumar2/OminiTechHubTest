@@ -1,0 +1,873 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+class MyModel extends CI_Model {
+
+	var $client_service = "frontend-client@chamko";
+	var $auth_key       = "wow@chamo@own";
+    // var $salt = "c4amk0@salt@plm";
+
+	public function check_auth_client(){
+		$client_service = $this->input->get_request_header('client-service', TRUE);
+		$auth_key  = $this->input->get_request_header('auth-key', TRUE);
+		if($client_service == $this->client_service && $auth_key == $this->auth_key){
+			return true;
+		} else {
+			return json_output(401,['status'=>['code' => 401,'message' => 'Unauthorized.'],'data'=>(new stdClass())]);
+
+		}
+	}
+
+	public function login($params)
+	{
+		$username = $params['mobile_number'];
+		$password = $params['password'];
+		$otp = $params['otp']; 
+		$_otp =false; 
+		$q  = $this->db->select("md5_password,user_id,name,IF(left(profile_pic,4)='http', profile_pic,profile_pic)  profile_pic,profile_summary bio")->from('users')->where('mobile_number',$username)->get()->row();
+
+		if($q == ""){ 
+			return  ['status'=>['code' =>204,'message' => 'Incorrect mobile number'],'data'=>(new stdClass())];
+
+		} else {
+			$hashed_password = $q->md5_password;
+			$id              = $q->user_id;
+			if(!empty($otp)){
+				$_otp  = $this->db->select(['id','otp','status'])->from('users_otp')->where(['mobile_number'=>$username,'otp'=>$otp])->order_by('id','DESC')->limit(1)->get()->row();
+				$_otp = !empty($_otp) && $_otp->status == 0 ? $_otp:FALSE; 
+			}
+
+			if((!empty($password) && md5($password) == $hashed_password) || (!empty($otp) && $_otp && $_otp->otp == $otp)){
+				$last_login = date('Y-m-d H:i:s');
+				$token = crypt(substr( md5(rand()), 0, 7));
+				$expired_at = date("Y-m-d H:i:s", strtotime('+12 hours'));
+				$this->db->trans_start();
+				$userdata =[
+					'last_login' => $last_login
+				]; 
+				if(!empty($_otp)){ 
+					$this->db->query("UPDATE users_otp SET status = 1 where id='" . $_otp->id   . "'");
+					$userdata['last_used_otp'] = $_otp->otp;
+				}
+
+				$this->db->where('id',$id)->update('users',$userdata);
+				$this->db->insert('users_authentication',array('users_id' => $id,'token' => $token,'expired_at' => $expired_at));
+				if ($this->db->trans_status() === FALSE){
+					$this->db->trans_rollback();
+					return  ['status'=>['code' => 500,'message' => 'Internal server error.'],'data'=>(new stdClass())];
+
+				} else { 
+					$this->db->trans_commit();
+					return  ['status'=>['code' => 200,'message' => 'Successfully login.'],'data'=>['id' => $id, 'token' => $token,'full_name'=>$q->name,'profile_pic'=>$q->profile_pic,'bio'=>$q->bio]];
+				}
+			} else {
+				return ['status'=>['code' => 204,'message' =>  !empty($otp)? 'Wrong OTP.':'Wrong password.'],'data'=>(new stdClass())];
+
+			}
+		}
+	}
+
+	public function register($params)
+	{
+		$username = $params['mobile_number'];
+		$name = $params['name'];
+		$otp = $params['otp'];
+		$_otp = FALSE;
+		$count  = $this->db->select('user_id')->from('users')->where('mobile_number',$username)->get()->num_rows();
+		if($count){
+			return  ['status'=>['code' => 409,'message' => 'User Already exists!'],'data'=>(new stdClass())];
+		}  
+
+		if(!empty($otp)){
+			$_otp  = $this->db->select(['id','otp','status'])->from('users_otp')->where(['mobile_number'=>$username,'otp'=>$otp])->order_by('id','DESC')->limit(1)->get()->row();
+			$_otp = !empty($_otp) && $_otp->status == 0 ? $_otp:FALSE; 
+		}
+		if(!empty($otp) && (!$_otp || $_otp->otp != $otp)){
+			return ['status'=>['code' => 401,'message' => 'Wrong Otp Entered!'],'data'=>(new stdClass())];
+		}
+
+
+		$last_login = date('Y-m-d H:i:s');
+		$token = crypt(substr( md5(rand()), 0, 7));
+		$expired_at = date("Y-m-d H:i:s", strtotime('+12 hours'));
+		$this->db->trans_start();
+		$userdata =[
+			'name'=>trim($name), 
+			'mobile_number'=>$username, 
+			'last_used_otp'=>$otp, 
+			'account_status'=>1,
+			'last_login' => $last_login,
+			'last_used_otp' => $_otp->otp
+		];
+
+		/* Insert new user entry into database. */
+		$this->db->insert("users", $userdata);
+		$users_id = $this->db->insert_id();
+// start update task 0 added by Dipendra on 14-09-2019 
+		$this->updatetaskzero($users_id); 
+// end update task 0 added by Dipendra on 14-09-2019 
+
+		$this->db->insert('users_authentication',array('users_id' => $users_id,'token' => $token,'expired_at' => $expired_at));
+		if ($this->db->trans_status() === FALSE){
+			$this->db->trans_rollback();
+			return ['status'=>['code' => 500,'message' => 'Internal server error.'],'data'=>(new stdClass())];
+
+		} else {
+			$this->db->trans_commit();
+			return  ['status'=>['code' => 200,'message' => 'Successfully Registered.'],'data'=>['id' => $users_id, 'token' => $token]];
+
+		} 
+
+	}
+
+	public function logout()
+	{
+		$users_id  = $this->input->get_request_header('user-id', TRUE);
+		$token     = $this->input->get_request_header('authorization', TRUE);
+		$this->db->where('users_id',$users_id)->where('token',$token)->delete('users_authentication');
+		$this->session->sess_destroy();
+
+		return ['status'=>['code' => 208,'message' => 'Successfully logout.'],'data'=>(new stdClass())];
+
+	}
+
+	public function auth($webview =FALSE,$users_id=FALSE,$token=FALSE)
+	{
+		$users_id  = $users_id?$users_id:$this->input->get_request_header('user-id', TRUE);
+		$token     = $token?$token:$this->input->get_request_header('authorization', TRUE);
+		$q  = $this->db->select('expired_at')->from('users_authentication')->where('users_id',$users_id)->where('token',$token)->get()->row();
+		if($q == ""){
+			return json_output(200,['status'=>['code' => 401,'message' => 'Unauthorized.'],'data'=>(new stdClass())]);
+
+		} else {
+			if($q->expired_at < date('Y-m-d H:i:s')){
+				return json_output(200,['status'=>['code' => 401,'message' => 'Your session has been expired.'],'data'=>(new stdClass())]);
+
+			} else {
+				$updated_at = date('Y-m-d H:i:s');
+				$expired_at = date("Y-m-d H:i:s", strtotime('+30 days'));
+				if($webview && !$this->session->userdata("user_id")){
+					$this->db->where('users_id',$users_id)->where('token',$token)->update('users_authentication',array('expired_at' => $expired_at,'updated_at' => $updated_at));
+
+					$getUser = $this->db->select(["user_id","name","edit_profile_status"])->from("users")->where('user_id',$users_id)->get()->row();
+					$this->session->set_userdata(array('user_id' => $getUser->user_id, 'name' => $getUser->name, 'edit_profile_status' => $getUser->edit_profile_status,'webview'=>1)); 
+
+				}
+				return array('status' => 200,'message' => 'Authorized.');
+			}
+		}
+	}
+
+	public function get_personal_detail(){
+		$users_id  = $this->input->get_request_header('user-id', TRUE);
+		$result = $this->db->select(['name','profile_summary bio','gender','mobile_number','email','state','city'])->from('users')->where(['user_id'=>$users_id])->get()->row();
+		if(!empty($result))
+			json_output(200,['status'=>['code' => 210,'message' => 'Success'],'data'=>$result]);
+		else
+			json_output(200,['status'=>['code' => 211,'message' => 'No Record available'],'data'=>(new stdClass())]);
+	}   
+
+	public function post_personal_detail(){
+		$users_id  = $this->input->get_request_header('user-id', TRUE);
+		$post = $this->input->post();
+		$result = $this->db->where(['user_id'=>$users_id])->update('users',['name'=>$post['name'],'profile_summary'=>$post['bio'],'gender'=>$post['gender'],'mobile_number'=>$post['mobile_number'],'email'=>$post['email'],'state'=>$post['state'],'city'=>$post['city']]);
+		if(!empty($result))
+			json_output(200,['status'=>['code' => 210,'message' => 'Information updated Successfully'],'data'=>$post]);
+		else
+			json_output(200,['status'=>['code' => 211,'message' => 'Something went wrong while saving Information'],'data'=>(new stdClass())]);
+	}
+
+	public function get_professional_detail(){
+		$users_id  = $this->input->get_request_header('user-id', TRUE);
+		$ref_code = ($ref_code = $this->db->select(['ref_code'])->from('users')->where(['user_id'=>$users_id])->get()->row()) ?$ref_code->ref_code :false;
+		$selected_talents =  $this->db->select(['talent_id'])->from('users_talent')->where(['user_id'=>$users_id])->get()->result();
+
+		$selected_category =  $this->db->select(['category_id'])->from('users_category')->where(['user_id'=>$users_id])->get()->result();
+     // if(!empty($ref_code)){
+		json_output(200,['status'=>['code' => 210,'message' => 'Success'],'data'=>[
+			'talent_manager'=>$ref_code ,
+			'selected_talents'=>  $selected_talents ? array_column($selected_talents, 'talent_id') :[],
+			'selected_categories'=>  $selected_category ? array_column($selected_category, 'category_id') :[]
+
+		]]);
+   // } else{
+   //      json_output(200,['status'=>['code' => 211,'message' => 'No Record available'],'data'=>(new stdClass())]);
+   // }
+	}  
+	public function get_platform_link($return=false){
+		$users_id  = $this->input->get_request_header('user-id', TRUE);
+		$platform =   $this->db->select('p.id platform_id,p.platform platform_name, p.platform_src,up.url profile_link')
+		->from('platforms p')
+		->join('`user_profile` up','p.id = up.platform AND up.user_id  = '.$users_id,'left')
+		->get()->result();
+		$_platform = [];
+		foreach ($platform as $key => $value) {
+			$_platform[$value->platform_name] = $value; 
+		}
+		if($return) 
+			return $_platform;
+    // pr($this->db->last_query());
+     // if(!empty($platform)){
+		json_output(200,['status'=>['code' => 210,'message' => 'Success'],'data'=> $_platform ]);
+   // } else{
+   //      json_output(200,['status'=>['code' => 211,'message' => 'No Record available'],'data'=>(new stdClass())]);
+   // }
+	} 
+	public function get_bank_detail($return =FALSE){
+		$users_id  = $this->input->get_request_header('user-id', TRUE);
+		$bankdetail =   $this->db->select(['account_holder_name beneficiary_name','account_number','ifs_code ifsc_code','bank_name','bank_address','pan_number','pan_image','cheque_image','aadhar_number','aadhar_image','if((select finance_status from users where users.user_id = '.$users_id.')=1,1,0) is_bank_detail_approved'])
+		->from('users_bank_info ubf')
+		->where('user_id',$users_id)
+		->get()->row_array();
+		$data = [
+			'beneficiary_name'=>  $bankdetail && array_key_exists('beneficiary_name',$bankdetail)? $bankdetail['beneficiary_name']:'',
+			'account_number'=>  $bankdetail && array_key_exists('account_number',$bankdetail)? $bankdetail['account_number']:'',
+			'ifsc_code'=> $bankdetail && array_key_exists('ifsc_code',$bankdetail)? $bankdetail['ifsc_code']:'',
+			'bank_name'=> $bankdetail && array_key_exists('bank_name',$bankdetail)? $bankdetail['bank_name']:'',
+			'bank_address'=> $bankdetail && array_key_exists('bank_address',$bankdetail)? $bankdetail['bank_address']:'',
+			'pan_number'=> $bankdetail && array_key_exists('pan_number',$bankdetail)? $bankdetail['pan_number']:'',
+			'pan_image'=> $bankdetail && array_key_exists('pan_image',$bankdetail)? $bankdetail['pan_image']:'',
+			'cheque_image'=> $bankdetail && array_key_exists('cheque_image',$bankdetail)? $bankdetail['cheque_image']:'',
+			'aadhar_number'=> $bankdetail && array_key_exists('aadhar_number',$bankdetail)? $bankdetail['aadhar_number']:'',
+			'aadhar_image'=> $bankdetail && array_key_exists('aadhar_image',$bankdetail)? $bankdetail['aadhar_image']:'',
+			'is_bank_detail_approved'=>$bankdetail && array_key_exists('is_bank_detail_approved',$bankdetail)? $bankdetail['is_bank_detail_approved']:''
+		];
+		if($return) return $data;
+    // pr($this->db->last_query());
+     // if(!empty($platform)){
+		json_output(200,['status'=>['code' => 210,'message' => 'Success'],'data'=>$data]);
+   // } else{
+   //      json_output(200,['status'=>['code' => 211,'message' => 'No Record available'],'data'=>(new stdClass())]);
+   // }
+	} 
+	public function create_otp($params) {
+		$number = trim($params["mobile_number"]);
+		$type = isset($params["type"]) && !empty($params["type"])=='login' ?  $params["type"]:'registration';
+		$otp = rand(1000, 9999);
+		if($type=='login')
+		{ 
+			$result = $this->db->select("user_id")->from("users")->where(["mobile_number" => $number])->get()->row();
+			if (!$result) {
+				return  ['status'=>['code' => 205,'message' => "User does not exists"],'data'=>(new stdClass())];
+			}
+
+		}
+		return $this->send_otp_sms(trim($number), $otp, $type= 'registration');  
+	}
+
+
+
+	public function send_otp_sms($number, $otp, $type) { 
+		$checkOTPoccrance = $this->db
+		->select("count(*) as total")
+		->from("users_otp")
+		->where("sent_at >= DATE_SUB(NOW(),INTERVAL 1 HOUR) and mobile_number='{$number}'")
+		->get()
+		->row();
+
+		if($checkOTPoccrance->total < 4) {
+			header('Access-Control-Allow-Origin: *');
+			header("Access-Control-Allow-Methods: GET, OPTIONS");
+
+			$data =http_build_query([
+				'username'=>"gyan@chamko.me",
+				'hash'=>"3ed923cea065070b1150929dafe41964d3623440247cf3136b901e6bf0a7c7e9",
+				'message'=>urlencode('OTP for your chamko ' . $type . ' is ' . $otp),
+				'sender'=>"CHAMKO",
+				'numbers'=>"91" . trim($number),
+				'test'=>FALSE  
+			]);
+
+			$ch = curl_init('http://api.textlocal.in/send/?');
+			curl_setopt($ch, CURLOPT_POST, true);
+			curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+			$response = curl_exec($ch);   
+
+			$error = curl_error($ch);
+			curl_close($ch);
+			$userdata = [
+				'mobile_number'=>$number,
+				'otp'=>$otp,
+				'status'=>'0',
+				'server_response'=>$response,
+				'ip_address'=>$this->getRealIpAddr()
+			];
+			$response =  json_decode($response,true);  
+			if($response && $response['status'] =='success'){
+				$this->db->insert('users_otp',$userdata);
+				return  ['status'=>['code' => 206,'message' =>"We've sent an OTP at your mobile number. Please Veirfy it."],'data'=>(new stdClass())];
+
+			}else {
+				return  ['status'=>['code' => 207,'message' =>"Error occured while generating the otp."],'data'=>[]];
+			}
+		}else{
+
+			return  ['status'=>['code' => 207,'message' =>"You have exceeded your limit. Please try after an hour"],'data'=>['next_retry_at'=>date("Y-m-d H:i:s", strtotime('+1 hour'))]];
+		}
+
+	}
+	public function post_upload_profile_pic() {
+		$user_id  = $this->input->get_request_header('user-id', TRUE);
+
+		$filename = $_FILES['file']['name'];
+		$file_tempname = $_FILES['file']['tmp_name'];
+		$folder_formate = $user_id;
+		$folder = "assets/profile_pics/" . $folder_formate;
+		if (!is_dir($folder)) {
+			mkdir($folder, 0755, true);
+		}
+		$ext = 'png';
+		$getUser = $this->db->query("SELECT IF(left(profile_pic,4)='http', profile_pic,CONCAT('".base_url()."/',profile_pic))  profile_pic from users WHERE user_id='" . $user_id . "'")->row();
+		if (in_array($ext, array('jpg', 'jpeg', 'png'))) {
+			$imgname = "user_" . md5(microtime()) . "_pic." . $ext;
+			$img_path = $folder . "/" . $imgname;
+			$resFlag = move_uploaded_file($file_tempname, $img_path);
+
+
+
+          // Rotate Image code block start
+			$this->load->library('image_lib');
+			$config['image_library'] = 'gd2';
+			$config['source_image'] = $img_path;
+			$config['new_image'] = $img_path;
+
+          // -- Check EXIF
+			$exif = exif_read_data($config['source_image'], "FILE,COMPUTED,ANY_TAG,IFD0,THUMBNAIL,COMMENT,EXIF", true);
+			if ($exif && isset($exif['Orientation'])) {
+				$ort = $exif['Orientation'];
+
+				if ($ort == 6 || $ort == 5)
+					$config['rotation_angle'] = '270';
+				if ($ort == 3 || $ort == 4)
+					$config['rotation_angle'] = '180';
+				if ($ort == 8 || $ort == 7)
+					$config['rotation_angle'] = '90';
+			} 
+
+			$config = array();
+
+			if ($resFlag === TRUE) {
+
+				$this->db->update("users",["profile_pic"=>$img_path],['user_id'=>$user_id]);
+				$awsS3Pic = (string) str_replace("\n", "", curlPost( $img_path, 'user_profile'));
+				if($awsS3Pic){
+					$this->db->update("users",["profile_pic"=> stripcslashes($awsS3Pic)],['user_id'=>$user_id]);
+
+				} 
+
+				json_output(200,['status'=>['code' => 210,'message' =>"Profile image uploaded Successfully"],'data'=>['image'=>!empty($awsS3Pic)?$awsS3Pic:base_url($img_path)]]);
+			} else {
+				json_output(200,['status'=>['code' => 211,'message' =>"Profile image not uploaded Successfully"],'data'=>['image'=> $getUser->profile_pic]]);
+			}
+		}else{
+			json_output(200,['status'=>['code' => 211,'message' =>"Invalid file format selection"],'data'=>['image'=> $getUser->profile_pic]]);
+		}
+	}
+
+	public function post_professional_detail(){
+		$user_id  = $this->input->get_request_header('user-id', TRUE);
+		$post = $this->input->post();
+  // pr($post);
+		$ref_code = array_key_exists('talent_manager',$post)?$post['talent_manager'] :false;
+		$selected_talents =  json_decode($post['selected_talents']) ? json_decode($post['selected_talents']):[];
+		$selected_categories = json_decode($post['selected_categories']) ? json_decode($post['selected_categories'])  :[];
+
+		try{
+    // if($ref_code){
+			$this->db->where('user_id',$user_id)->update('users',['ref_code'=>$ref_code]);
+    // }
+
+			$this->db->delete('users_talent',['user_id'=>$user_id]);
+			if(count($selected_talents)){
+				$talents =[];
+				foreach ($selected_talents as $key => $value) {
+					$talents[] =['user_id'=>$user_id,'talent_id'=>$value];
+				}
+				$this->db->insert_batch('users_talent',$talents);
+			}
+
+			$this->db->delete('users_category',['user_id'=>$user_id]);
+			if(count($selected_categories)){
+				$categories =[];
+				foreach ($selected_categories as $key => $value) {
+					$categories[] =['user_id'=>$user_id,'category_id'=>$value];
+				}
+				$this->db->insert_batch('users_category',$categories);
+			}
+
+			json_output(200,['status'=>['code' => 210,'message' => 'Professional detail saved successfully'],'data'=>[
+				'talent_manager'=>$ref_code ,
+				'selected_talents'=>  $selected_talents ,
+				'selected_categories'=>  $selected_categories
+
+			]]);
+		}catch(Exception $e) {
+			json_output(200,['status'=>['code' => 211,'message' => $e->getMessage()],'data'=>(new stdClass())]);
+
+		} 
+	}  
+
+	public function post_platform_link() {
+		$user_id  = $this->input->get_request_header('user-id', TRUE);
+		$post = $this->input->post();
+		try{
+			foreach ( $post['platform'] as $key => $val) {
+            //if ($val) {
+				$res = $this->db->query("SELECT id from user_profile where user_id='" . $user_id . "' and platform='" . $key . "'")->row();
+				if (!empty($res)) {
+					$this->db->query("UPDATE user_profile SET url='" . $val . "' where id='" . $res->id . "'");
+				} else {
+					$this->db->insert("user_profile", array('user_id' => $user_id, 'url' => $val, 'url_type' => '1', 'platform' => $key));
+				}
+            //}
+			}
+			json_output(200,['status'=>['code' => 210,'message' => "Profile Links Updated Successfully"],'data'=>$this->get_platform_link(TRUE)]);
+
+		} catch(Exception $e) {
+			json_output(200,['status'=>['code' => 211,'message' => $e->getMessage()],'data'=>$this->get_platform_link(TRUE)]);
+
+		} 
+	}
+
+	public function post_bank_detail() {
+		$user_id  = $this->input->get_request_header('user-id', TRUE);
+
+		$post =$this->input->post();
+		try{
+			$res = $this->db->query("SELECT id from users_bank_info where user_id='" . $user_id . "'")->row();
+
+			if ($res) {
+				$this->db->query("UPDATE users_bank_info SET account_holder_name='" . $post['beneficiary_name'] . "',account_number='" . $post['account_number'] . "',ifs_code='" . $post['ifsc_code'] . "',bank_name='" . $post['bank_name'] . "',bank_address='" . $post['bank_address'] . "',pan_number='" . $post['pan_number'] . "',aadhar_number='" . $post['aadhar_number'] . "',status=6 where id='" . $res->id . "'");
+			} else {
+				$this->db->insert("users_bank_info", array( 'user_id' => $user_id, 'account_holder_name' => $post['beneficiary_name'], 'account_number' => $post['account_number'], 'ifs_code' => $post['ifsc_code'], 'bank_name' => $post['bank_name'], 'bank_address' => $post['bank_address'], 'pan_number' => $post['pan_number'], 'aadhar_number' => $post['aadhar_number'], 'status' => 6));
+			} 
+
+			json_output(200,['status'=>['code' => 210,'message' => 'Bank detail saved Successfully'],'data'=>$this->get_bank_detail(TRUE)]);
+		} catch(Exception $e) {
+			json_output(200,['status'=>['code' => 211,'message' => $e->getMessage()],'data'=>$this->get_bank_detail(TRUE)]);
+
+		} 
+	}
+
+	public function post_upload_bank_detail() {
+		$filename = $_FILES['file']['name'];
+		$file_tempname = $_FILES['file']['tmp_name'];
+
+		$user_id  = $this->input->get_request_header('user-id', TRUE);
+		$folder_formate = $user_id;
+		$type= $this->input->post('type');
+		$folder = "assets/".$type."_pics/" . $folder_formate;
+		$field = $type.'_image';
+
+		if (!file_exists($folder)) {
+			mkdir($folder, 0755, true);
+		}
+		$ext = strtolower($this->common->file_extension($filename));
+		if (in_array($ext, array('jpg', 'jpeg', 'png'))) {
+			$imgname = "user_" . md5(microtime()) . "_pic." . $ext;
+			$img_path = $folder . "/" . $imgname;
+			$resFlag = move_uploaded_file($file_tempname, $img_path);
+    // pr($img_path); 
+			$awsS3Pic = (string) str_replace("\n", "",  curlPost($img_path , 'bank_document'));
+			if ($resFlag === TRUE) {
+				$getUser = $this->db->select($field)->from("users_bank_info")->where("user_id",$user_id)->get()->row();
+				if (count($getUser) > 0) {
+					if ($getUser->$field) {
+						@unlink($getUser->$field);
+					}
+					$this->db->where('user_id',$user_id)->update("users_bank_info",[$field=>stripcslashes($awsS3Pic)]); 
+				} else {
+					$this->db->insert("users_bank_info", array($field => $awsS3Pic, 'user_id' => $user_id));
+
+				}
+				json_output(200,['status'=>['code' => 210,'message' => ucfirst($type).' image updated successfully'],'data'=>[
+					'type'=> $type,
+					'file'=>$awsS3Pic
+				]]);
+
+			} else {
+				json_output(200,['status'=>['code' => 211,'message' => error_get_last()],'data'=>(new stdClass())]);
+
+			}
+		} else {
+			json_output(200,['status'=>['code' => 211,'message' =>'unsupported type'],'data'=>(new stdClass())]);
+		}
+	}
+
+
+	public function post_password() {
+		$user_id  = $this->input->get_request_header('user-id', TRUE);
+		$post = $this->input->post();
+		try{
+			if(array_key_exists('old_password', $post)){
+				if(!$this->db->select("user_id")->from("users")->where(['user_id'=>$user_id,'md5_password'=>md5($post['old_password'])])->get()->num_rows()){
+					json_output(200,['status'=>['code' => 211,'message' =>'Old password does not matched.'],'data'=>(new stdClass())]);
+				}
+			}
+			$this->db
+			->where('user_id',$user_id)
+			->update("users",[
+				'password' =>  base64_encode($post['password']),
+				'md5_password'=> md5($post['password']) 
+			]); 
+			json_output(200,['status'=>['code' => 210,'message' => "Password saved Successfully"],'data'=>(new stdClass())]);
+
+		} catch(Exception $e) {
+			json_output(200,['status'=>['code' => 211,'message' => $e->getMessage()],'data'=>(new stdClass())]);
+		} 
+	}  
+	public function get_mywork($id =false,$return= false){
+		$_id = $id;
+		try{
+			if(!$id){
+				$limit = 10;
+				$page = $this->input->get_post('page') ?$this->input->get_post('page'):1; 
+				$user_id = $this->input->get_post('user_id') ? $this->input->get_post('user_id'):false; 
+
+				$start = ($page - 1 ) * $limit;
+				// $this->db->select('id')->from('my_work');
+				// if($user_id){
+				// 	$this->db->where('user_id',$user_id);
+				// }
+				// $result = $this->db->order_by('id','desc')->limit($limit, $start)->get();
+
+				
+				// if($result->num_rows()){
+				// 	$id = array_column($result->result(), 'id');
+				// 	$id = implode(',', $id);
+				// }else{
+				// 	$id =-1;
+				// }
+
+				$id = $this->get_page_campaign_id($user_id,$limit,$start);
+				if($id){
+					$id = "'".implode("','", $id)."'";
+				}
+			}
+			if($id){
+				$resultset = $this->db->query("SELECT 
+					mw.* ,
+					u.`name`,
+					p.`platform`,
+					CONCAT('".base_url()."',p.`platform_src`) platform_src,
+					GROUP_CONCAT(c.`category`) catagories,
+					GROUP_CONCAT(t.`talent`) talents
+					FROM (
+					SELECT 
+					CONCAT('link_',id) link_id,
+					`id`,
+					`user_id`,
+					`social_link`,
+					'' video_url,
+					`task_id`,
+					`description`,
+					`platform_id`,
+					1  priority
+					FROM my_work 
+					WHERE CONCAT('link_',id) IN($id) 
+					UNION  
+					SELECT 
+					CONCAT('video_',id) link_id,
+					`id`,
+					user_id,
+					'' `social_link`,
+					`video_url`, 
+					`campaign_id`  task_id,
+					`description`,
+					0 platform_id,
+					0 priority
+					FROM `campaign_works`
+					WHERE CONCAT('video_',id) IN($id) 
+					) mw
+					JOIN users u ON u.`user_id` = mw.`user_id`
+					LEFT JOIN platforms p ON p.`id` = mw.`platform_id`
+					LEFT JOIN `states` s ON s.`state_id` = u.`state`
+					LEFT JOIN cities ci ON ci.`city_id` =  u.`city`
+					LEFT JOIN `users_talent`  ut ON ut.`user_id`  = u.`user_id`
+					LEFT JOIN talents t ON t.`id`= ut.`talent_id`
+					LEFT JOIN `users_category` uc ON  uc.`user_id`= u.`user_id`
+					LEFT JOIN categories c ON c.`id`= uc.`category_id`
+					GROUP BY mw.id
+					ORDER BY mw.link_id DESC");
+				if($_id)
+					$resultset = $resultset->row();
+				else
+					$resultset =  $resultset->result();
+				json_output(200,['status'=>['code' => 212,'message' => "Success"],'data'=>$resultset]);
+			}else{
+				json_output(200,['status'=>['code' => 213,'message' => "No Record Find"],'data'=>[]]);
+
+			}
+		} catch(Exception $e) {
+			json_output(200,['status'=>['code' => 213,'message' => $e->getMessage()],'data'=>[]]);
+		}
+	}
+
+	function get_page_campaign_id($user_id,$limit,$start){
+		$sql = "SELECT 
+		mw.link_id
+		FROM (
+		SELECT 
+		CONCAT('link_',id) link_id 
+		FROM my_work 
+		WHERE [V_WHERE]
+		UNION  
+		SELECT 
+		CONCAT('video_',id) link_id 
+		FROM `campaign_works`
+		WHERE [V_WHERE]
+		) mw 
+		LIMIT $start,$limit
+		";
+		$where = "";
+		if($user_id){
+			$where = "user_id = $user_id";
+		}
+		$sql = strtr($sql,['[V_WHERE]'=>$where]);
+		$query = $this->db->query($sql);
+		$ids =  false;
+		if($query->num_rows()){
+			return array_column($query->result_array(),'link_id');
+		}	
+
+	}
+	function get_campaign($task_id){
+		$user_id  = $this->session->userdata('user_id') ? $this->session->userdata('user_id') : $this->input->get_request_header('user-id', TRUE);
+
+		$ResultSet = [];
+		$queryString = "CALL `get_campaign_detail`($task_id,$user_id)"; 
+		$campaign = [];
+
+		try{
+			$this->db->conn_id->multi_query($queryString);
+			if (false != $result = $this->db->conn_id->store_result()) {
+				if(!$result->num_rows){
+					json_output(200,['status'=>['code' => 213,'message' => 'No Record found'],'data'=>(new stdClass())]);
+				}
+				$campaign = $result->fetch_object();
+
+				$result = $this->db->conn_id->more_results()  && $this->db->conn_id->next_result() ? $this->db->conn_id->store_result():FALSE;
+				$campaign->platforms =[];
+				if($result && $result->num_rows){
+					while ( $row = $result->fetch_object()) {
+						$campaign->platforms[] = $row;
+					}
+				}
+				
+				
+ 			// 	if(!$result || !$result->num_rows){
+				// 	json_output(200,['status'=>['code' => 213,'message' => 'No Record found'],'data'=>(new stdClass())]);
+				// }
+			}
+			$message = in_array($campaign->status, [217,219])?$campaign->comment:'Success';
+			json_output(200,['status'=>['code' => $campaign->status,'message' => $message],'data'=>$campaign]);
+
+		} catch(Exception $e) {
+			json_output(200,['status'=>['code' => 213,'message' => $e->getMessage()],'data'=>(new stdClass())]);
+		}
+	}
+	public function post_mywork(){
+		$user_id  = $this->session->userdata('user_id') ? $this->session->userdata('user_id') : $this->input->get_request_header('user-id', TRUE);
+
+		$campaign_id = $this->input->post('task_id');
+		$platform = $this->input->post('platform');
+		$url = $this->input->post('url');
+		$type = $this->input->post('type');
+		$description = $this->input->post('description');
+		$date= date('Y-m-d H:i:s');
+		$campaign=[];
+		$qry = $this->db
+		->select('id,status')
+		->where(['campaign_id'=>$campaign_id,'user_id'=>$user_id])
+		->get('campaign_works');
+		// pr($this->db->last_query());
+		// pr($qry);
+		$id = false; 
+		$status = 215;
+		if($qry->num_rows()){
+			$row = $qry->row();
+			$id = $row->id;
+			$status = $row->status;
+		}
+
+		if($type =='video'){
+			$status = 218;//216
+			$campaign= [
+				'campaign_id'=>$campaign_id,
+				'user_id'=>$user_id,
+				'video_url'=>$url,
+				'status'=>$status ,//216
+				'created_at'=>$date,
+				'description' =>$description
+			];
+			$table = 'campaign_works';
+
+			if(!$id && $this->db->insert($table,$campaign)){
+				$id = $this->db->insert_id();
+
+			}else{
+				$this->db->update($table,$campaign,['id'=>$id]);
+			} 
+			if($status == 216 ){
+				$custom_field = [
+					'campaign_id'=>$campaign_id,
+					'status'=>$status
+				];
+				$activity_type_id = 5;
+				//add_activity_notifications($user_id,$activity_type_id,$status,$custom_field);
+			}
+			json_output(200,['status'=>['code' => $status,'message' => "Video has been uploaded successfully!"],'data'=>['id'=>$id]]);
+
+		}else if($id){
+			if($this->db->where(['social_link'=>$url])->get('my_work')->num_rows()){
+				json_output(200,['status'=>['code' => 213,'message' => "Url Already exists!"],'data'=>(new stdClass())]);
+			}
+			$table = 'my_work';
+			$campaign =[
+				'campaign_work_id'=>$id,
+				'created_at'=>$date,
+				'user_id'=>$user_id,
+				'platform_id'=>$platform,
+				'social_link'=>$url,
+				'task_id'=>$campaign_id,
+				'status'=>1,
+				'description'=>$description
+			];
+			$this->db->insert($table,$campaign);	
+			json_output(200,['status'=>['code' => 212,'message' => "Your work has been posted successfully!"],'data'=>(new stdClass())]);
+
+		}
+	}
+
+	public function put_mywork($work_id){
+		if($this->db->where(['id'=>$id])->get('campaign_works')->num_rows()){
+			try{
+
+				$this->db->where(['id'=>$id])->update('campaign_works',[
+					'video_url'=>$this->input->post('video_url')
+				]);
+				json_output(200,['status'=>['code' => 212,'message' => "Success"],'data'=>['id'=>$id]]);
+
+
+			} catch(Exception $e) {
+				json_output(200,['status'=>['code' => 213,'message' => $e->getMessage()],'data'=>(new stdClass())]);
+			}
+		}else{
+			json_output(200,['status'=>['code' => 213,'message' => 'No Record found'],'data'=>(new stdClass())]);
+
+		}  
+	} 
+
+	public function save_video($work_id = false){
+		$user_id  = $this->session->userdata('user_id') ? $this->session->userdata('user_id') : $this->input->get_request_header('user-id', TRUE);
+		$campaign_id = $this->input->post('task_id');
+		try{
+			$campaign = [
+				'campaign_id'=>$campaign_id,
+				'user_id'=>$user_id,
+				'video_url'=>$this->input->post('video_url'),
+				'status'=>216,
+				'created_at'=>date('Y-m-d H:i:s')
+			];
+			$qry = $this->db->select('id')->where(['campaign_id'=>$campaign_id,'user_id'=>$user_id])->get('campaign_works');
+			if($qry->num_rows()){
+				$id = $qry->row()->id;
+				$this->db->update('campaign_works',$campaign,['id'=>$id]);
+			}else{
+				$this->db->insert('campaign_works',$campaign);
+				$id = $this->db->insert_id();
+			}
+			json_output(200,['status'=>['code' => 212,'message' => "Success"],'data'=>['id'=>$id]]);
+		} catch(Exception $e) {
+			json_output(200,['status'=>['code' => 213,'message' => $e->getMessage()],'data'=>(new stdClass())]);
+		}
+
+	} 
+	public function delete_mywork($id){
+		$user_id  = $this->input->get_request_header('user-id', TRUE); 
+		try{
+			$this->db->delete('my_work',['id'=>$id]);
+			json_output(200,['status'=>['code' => 212,'message' => "Your work deleted Successfully"],'data'=>['id'=>$id]]);
+		} catch(Exception $e) {
+			json_output(200,['status'=>['code' => 213,'message' => $e->getMessage()],'data'=>(new stdClass())]);
+		}
+	}
+
+	/* This function is used to get IP address of user for further use. */
+
+	public function getRealIpAddr() {
+        //check ip from share internet
+		if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+			$ip = $_SERVER['HTTP_CLIENT_IP'];
+		} elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            //to check ip is pass from proxy
+			$ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+		} else {
+			$ip = $_SERVER['REMOTE_ADDR'];
+		}
+		return $ip;
+	}
+	public function updatetaskzero($user_id) {
+
+		$task0 = $this->db->query("SELECT id from applied_tasks where user_id='" . $user_id . "' and task_id=1")->num_rows();
+		if (empty($task0)) {
+			$this->db->query("INSERT INTO applied_tasks set user_id='" . $user_id . "' , task_id=1,platform_id=0,has_approve=1");
+			return true;
+		}
+	}
+
+
+
+	function get_notifications($task_id){
+		$user_id  = $this->session->userdata('user_id') ? $this->session->userdata('user_id') : $this->input->get_request_header('user-id', TRUE);
+		$last_id = $this->input->post('last_id')? $this->input->post('last_id') :  '0';
+		$ResultSet = [];
+		$queryString = "CALL `get_notifications`($user_id,$last_id)"; 
+		$data = [];
+
+		try{
+			$this->db->conn_id->multi_query($queryString);
+			if (false != $result = $this->db->conn_id->store_result()) {
+
+				if(!$result->num_rows){
+					json_output(200,['status'=>['code' => 213,'message' => 'No Record found'],'data'=>[]]);
+				} 
+				while ( $row = $result->fetch_object()) {
+					$row->data = json_decode($row->data);
+					$data[] = $row;
+				} 
+				json_output(200,['status'=>['code' => 212,'message' => 'Success'],'data'=>$data]);
+
+			}else{
+				json_output(200,['status'=>['code' => 213,'message' => 'No Record found'],'data'=>[]]);
+			}
+		} catch(Exception $e) {
+			json_output(200,['status'=>['code' => 213,'message' => $e->getMessage()],'data'=>[]]);
+		}
+	}
+
+	public function post_device_token(){
+		$user_id  = $this->session->userdata('user_id') ? $this->session->userdata('user_id') : ($this->input->get_request_header('user-id', TRUE)?$this->input->get_request_header('user-id', TRUE):'0');
+
+		$device_token = $this->input->post('device_token');
+		$app_type = $this->input->post('app_type');
+		try {
+			$this->db->query(
+				"INSERT INTO `users_device` (`user_id`,`device_token`,`app_type`,updated_at)
+				VALUES ($user_id,
+				'$device_token',		
+				$app_type,NOW()) ON DUPLICATE KEY UPDATE 
+				`user_id` = $user_id,
+				`app_type` = $app_type,
+				updated_at = NOW()"
+			);
+			json_output(200,['status'=>['code' => 212,'message' => 'Success'],'data'=>(new stdClass())]);
+		} catch (Exception $e) { 
+			json_output(200,['status'=>['code' => 213,'message' => $e->getMessage()],'data'=>(new stdClass())]);
+		}
+	}
+
+	
+
+} 

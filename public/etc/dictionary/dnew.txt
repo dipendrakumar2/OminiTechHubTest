@@ -1,0 +1,55 @@
+$('.task-approval').change(function () {
+    var status = $(this).val();
+    if (status == 0) {
+    alert("select a valid option");
+    return false;
+    }
+    var taskid = $(this).parents('tr').find('td[taskid]').attr("taskid");
+    
+        dialog = $( "#dialog-form" ).dialog({
+      autoOpen: false,
+      height: 400,
+      width: 350,
+      modal: true,
+      buttons: {
+        "Create an account": addUser,
+        Cancel: function() {
+          dialog.dialog( "close" );
+        }
+      },
+      close: function() {
+        form[ 0 ].reset();
+        allFields.removeClass( "ui-state-error" );
+      }
+    });
+  var comment = $(this).parents('tr').find($('textarea#exampleFormControlTextarea3')).val();
+    $.ajax({
+    url: "<?php echo base_url(); ?>Admin/updatetaskwithcomment",
+    data: {status: status, taskid: taskid, comment: comment},
+    type: "POST",
+    dataType: "json",
+    success: function (data) {
+
+    if (data == true) {
+    alert("Task updated successfully");
+    }
+    }
+
+    });
+    if (status == 1) {
+    $(this).removeClass();
+    $(this).addClass('btn btn-success btn-sm dropdown-toggle task-approval');
+    $(this).parents('tr').find('td').eq(13).addClass('status--process').text('Approved');
+    }
+    if (status == 2) {
+    $(this).removeClass();
+    $(this).addClass('btn btn-warning btn-sm dropdown-toggle task-approval');
+    $(this).parents('tr').find('td').eq(13).addClass('status--denied').text('Improve');
+    }
+    if (status == 3) {
+    $(this).removeClass();
+    $(this).addClass('btn btn-danger btn-sm dropdown-toggle task-approval');
+    $(this).parents('tr').find('td').eq(13).addClass('status--denied').text('Rejected');
+    }
+
+    });

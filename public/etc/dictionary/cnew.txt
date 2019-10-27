@@ -1,0 +1,49 @@
+Campaign
+Creator
+User id
+Bank details
+Category
+Talent
+Posts
+Bank docs
+Bank det.
+Comment
+Profile
+Follower
+
+
+Avg vv
+Eng rate
+Assign
+Approval
+Region
+Incubator
+Status
+
+ETHAN$21@43
+ashishgupta@sipi.in
+
+kapishraj@garg123
+kapisrajgarg
+
+vivekparmaragnihotri
+parmaragnihotrivivek!@#321
+
+* * * * * https://www.chamko.me/crons/executeNotifications > /dev/null 2>&1
+
+
+https://sharechat.com/profile/mhkbjj
+
+,upp.average_video_count,upp.followers,upp.eng_score
+
+# Table, Create Table
+ALTER TABLE `influencer_segment` ADD `position` BOOLEAN NOT NULL AFTER `max`; 
+INSERT INTO `influencer_segment` (`id`, `name`, `description`, `status_id`, `min`, `max`, `position`) VALUES (NULL, 'L0', '', '1', '0', '0', '1'); 
+
+UPDATE `chamko_dev`.`influencer_segment` SET `max`='1000' WHERE `id`='6';
+UPDATE `chamko_dev`.`influencer_segment` SET `min`='1001' WHERE `id`='1';
+
+ALTER TABLE `chamko_dev`.`user_platforms_feeds` 
+CHANGE COLUMN `post_image_url` `post_image_url` VARCHAR(1000) NULL DEFAULT NULL ,
+CHANGE COLUMN `post_url` `post_url` VARCHAR(1000) NOT NULL ;
+

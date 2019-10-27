@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <!-- Required meta tags-->
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta name="description" content="au theme template">
+        <meta name="author" content="Hau Nguyen">
+        <meta name="keywords" content="au theme template">
+
+        <!-- Title Page-->
+        <title>Dashboard 4</title>
+
+        <!-- Fontfaces CSS-->
+        <link href="<?php echo base_url(); ?>assets/css/font-face.css" rel="stylesheet" media="all">
+        <link href="<?php echo base_url(); ?>assets/vendor/font-awesome-4.7/css/font-awesome.min.css" rel="stylesheet" media="all">
+        <link href="<?php echo base_url(); ?>assets/vendor/font-awesome-5/css/fontawesome-all.min.css" rel="stylesheet" media="all">
+        <link href="<?php echo base_url(); ?>assets/vendor/mdi-font/css/material-design-iconic-font.min.css" rel="stylesheet" media="all">
+
+        <!-- Bootstrap CSS-->
+        <link href="<?php echo base_url(); ?>assets/vendor/bootstrap-4.1/bootstrap.css" rel="stylesheet" media="all">
+
+        <!-- Vendor CSS-->
+
+        <link href="<?php echo base_url(); ?>assets/vendor/select2/select2.min.css" rel="stylesheet" media="all">
+        <link href="<?php echo base_url(); ?>assets/vendor/perfect-scrollbar/perfect-scrollbar.css" rel="stylesheet" media="all">
+        <link href="<?php echo base_url(); ?>assets/css/zoom.css" rel="stylesheet" media="all">
+        <!-- Datepicker&filter CSS-->
+        <link href="<?php echo base_url(); ?>assets/vendor/css/style_admin.css" rel="stylesheet" media="all">
+
+        <!-- Main CSS-->
+        <link href="<?php echo base_url(); ?>assets/css/theme.css" rel="stylesheet" type="text/css" rel="dns-prefetch" media="all">
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+                integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+        crossorigin="anonymous"></script>
+
+        <style>
+            #header-fixed { 
+                position: fixed; 
+                top: 0px; left: 15px; right: 15px;
+                background-color:white;
+            }
+            .modal {
+                display: none; /* Hidden by default */                                     
+            }
+
+            .modal-dialog {
+                max-width: 800px;
+            }
+            .modal-content {
+                height: auto;
+                min-height: 100%;
+                border-radius: 0;
+            }
+            .modal-body {
+                position: relative;
+                overflow-y: auto;
+                max-height: 400px;
+                max-width: 100%;
+                padding: 15px;
+            }
+        </style>
+        <script>
+            $(document).ready(function () {
+            var $pageHeader = $('header').height();
+            var $showDiv = $('#header-fixed');
+            var tableOffset = $("#table-1").offset().top;
+            var $header = $("#table-1 thead").clone();
+            var $row = $("#group-of-rows-Task0").clone();
+            $("#table-header-fixed").append($header);
+            $showDiv.css('top', $pageHeader);
+
+            if ($(window).scrollTop() < tableOffset) {
+            $showDiv.hide();
+            }
+
+            $(window).bind("scroll", function () {
+
+            var offset = $(this).scrollTop();
+
+            if (offset >= tableOffset && $showDiv.is(":hidden")) {
+            $showDiv.css('top', $pageHeader).show();
+            }
+            else if (offset < tableOffset) {
+            $showDiv.hide();
+            }
+            });
+
+            })
+        </script>
+    </head>
+
+    <body>
+
+        <!-- HEADER DESKTOP-->
+        <header class="header-desktop3 d-none d-lg-block">
+            <div class="section__content section__content--p35">
+                <div class="header3-wrap">
+                    <div class="header__logo">
+                        <a href="#">
+                            <img src="<?php echo base_url(); ?>assets/images/icon/chamko-logo.png" alt="CoolAdmin" />
+                        </a>
+                    </div>
+                    <div class="header__navbar">
+                        <ul class="list-unstyled">
+                            <li class="has-sub">
+                                <a href="#">
+                                    <i class="fas fa-tachometer-alt"></i>Dashboard
+                                    <span class="bot-line"></span>
+                                </a>                               
+                            </li>
+
+                            <!--                            <li class="has-sub">
+                                                            <a href="#">
+                                                                <i class="fas fa-copy"></i>
+                                                                <span class="bot-line"></span>Reports</a>
+                                                            <ul class="header3-sub-list list-unstyled">
+                                                                <li>
+                                                                    <a href="<?php echo base_url('/reports/taskwise'); ?>">Task wise</a>
+                                                                </li>
+                                                                <li>
+                                                                    <a href="<?php echo base_url('/reports/incubators'); ?>">Incubator wise</a>
+                                                                </li>
+                                                                                                    <li>
+                                                                                                        <a href="index3.html">Dashboard-4</a>
+                                                                                                    </li>
+                                                            </ul>
+                                                        </li>-->
+                            <?php if (in_array($this->session->userdata['role'], array(1, 3))) { ?> 
+                                <li class="has-sub">
+                                    <a href="<?php echo base_url('/admin/createtask'); ?>">
+                                        <i class="fas fa-tasks" ></i>Campaign
+                                        <span class="bot-line"></span>
+                                    </a>                               
+                                </li>
+                                <?php if ($this->session->userdata['role'] == 1) { ?> 
+                                    <li class="has-sub">
+                                        <a href="<?php echo base_url('/admin/financeDashboard'); ?>">
+                                            <i class="fas fa-tasks" ></i>Payment Dashboard
+                                            <span class="bot-line"></span>
+                                        </a>                               
+                                    </li>
+                                    <li class="has-sub">
+                                        <a href="#">
+                                            <i class="fas fa-history" ></i>Activity
+                                            <span class="bot-line"></span>
+                                        </a>                               
+                                    </li>
+                                    <li class="has-sub">
+                                        <a href="#">
+                                            <i class="fas fa-users" ></i>Leader
+                                            <span class="bot-line"></span>
+                                        </a>                               
+                                    </li><?php
+                                }
+                            }
+                            ?>
+                        </ul>
+                    </div>
+                    <div class="header__tool">
+                        <div class="header-button-item has-noti js-item-menu">
+                            <i class="zmdi zmdi-notifications"></i>
+
+                        </div>
+                        <div class="header-button-item js-item-menu">
+                            <i class="zmdi zmdi-settings"></i>
+
+                        </div>
+                        <div class="header-button-item js-item-menu">
+                            <a href="Javascript:void(0);"><i class="fa fa-power-off fa-sm"></i></a>
+
+                        </div>
+                        <div class="account-wrap">
+                            <div class="account-item account-item--style2 clearfix js-item-menu">
+                                <div class="image">
+                                    <img src="<?php echo base_url(); ?>assets/images/icon/avatar.jpg" alt="User" />
+                                </div>                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <!-- END HEADER DESKTOP-->
+
+        <!-- HEADER MOBILE-->
+
+
+        <!-- END HEADER DESKTOP-->
+
+        <section class="p-t-20">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-12">
+                        <!--                <h3 class="title-5 m-b-35">Dashboard</h3>-->
+                        <form action="<?php echo base_url('Admin/dashboard'); ?>" method="post" class="form-header" >
+                            <input type="hidden" id="inputDate" name="inputDate" value="<?php echo @$_POST['inputDate']; ?>">
+                            <input type="hidden" id="inputDateText" name="inputDateText" value="<?php echo @$_POST['inputDateText']; ?>">
+                            <div class="table-data__tool">
+                                <div class="filter effect1">
+                                    <div class="row no-gutters">
+                                        <div class="welcome2-greeting">
+
+                                        </div>
+                                        <div class="col-md-12 font-weight-bold pt-2 pl-3 pb-2 pl-3">
+                                            <input style="float:right; right:20px;" class="au-input au-input--w435" onkeypress='return event.charCode >= 48 && event.charCode <= 57' type="text"name="search" value="<?php echo @$_POST['search']; ?>" placeholder="Search by User ID &amp; User mobile number" maxlength="10" autocomplete="false">
+                                            <button style="height:45px; float: right; left:428px;" class="au-btn--submit" type="submit">
+                                                <i class="zmdi zmdi-search"></i>
+                                            </button>
+                                        </div> 
+                                        <div class="col-md-3 p-2">
+                                            <div id="reportrange" style="background: #fff; cursor: pointer; padding: 8px 10px; border: 1px solid #dee2e6; width: 100%; font-size:14px;">
+                                                <i class="fa fa-calendar"></i>&nbsp;
+                                                <span></span> <i class="fa fa-caret-down" style="float: right; margin-top: 5px; font-size: 14px;"></i>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 p-2">
+                                            <div class="dropdown w-100">
+
+                                                <select  class="btn border w-100 p-2 text-left dropdown-toggle" name="usertype">
+                                                    <option value="0">Select User Type</option>
+                                                    <option value="1"  selected="selected">Registration-wise</option>
+                                                    <option value="2">Approval-wise</option>
+                                                </select>
+
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-3 p-2">
+                                            <select  class="btn border w-100 p-2 text-left dropdown-toggle" name="state" id="state">
+                                                <option value="0" selected="selected">Select State</option>
+                                                <?php
+                                                for ($i = 0; $i < count($this->data['state']); $i++) {
+                                                    ?>
+                                                    <option value="<?php echo $this->data['state'][$i]->state_id; ?>" <?php if (@$_POST['state'] == $this->data['state'][$i]->state_id) { ?> selected="selected" <?php } ?>><?php echo $this->data['state'][$i]->state_name; ?></option>
+                                                <?php }
+                                                ?>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3 p-2">
+                                            <select  class="btn border w-100 p-2 text-left dropdown-toggle" name="city" id="city">
+                                                <option value="0" selected="selected">Select City</option>
+
+                                            </select>
+                                            <?php
+                                            if (!empty(@$_POST['city'])) {
+                                                ?><input type="hidden" name="city_value" id="city_value" value="<?php echo $_POST['city']; ?>">
+                                            <?php }
+                                            ?>
+                                        </div>
+                                        <div class="col-md-3 p-2">
+                                            <div class="dropdown w-100">
+                                                <select  class="btn border w-100 p-2 text-left dropdown-toggle" name="gender">
+                                                    <option value="0" selected="selected">Select Gender</option>
+                                                    <option value="1" <?php if (@$_POST['gender'] == "1") { ?> selected="selected" <?php } ?>>Male</option>
+                                                    <option value="2" <?php if (@$_POST['gender'] == "2") { ?> selected="selected" <?php } ?>>Female</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-3 p-2">
+                                            <div class="dropdown w-100">
+                                                <select  class="btn border w-100 p-2 text-left dropdown-toggle" name="categories" disabled="disabled">
+                                                    <option value="0" selected="selected">Select Category</option>
+                                                    <?php
+                                                    for ($i = 0; $i < count($this->data['categories']); $i++) {
+                                                        ?>
+                                                        <option value="<?php echo $this->data['categories'][$i]->id; ?>" <?php if (@$_POST['categories'] == $this->data['categories'][$i]->id) { ?> selected="selected" <?php } ?>><?php echo $this->data['categories'][$i]->category; ?></option>
+                                                    <?php }
+                                                    ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 p-2">
+                                            <div class="dropdown w-100">
+                                                <select  class="btn border w-100 p-2 text-left dropdown-toggle" name="rank" disabled="disabled">
+                                                    <option value="0" selected="selected">Select Rank</option>
+                                                    <?php
+                                                    for ($i = 1; $i < 1000; $i++) {
+                                                        ?>
+                                                        <option value="<?php echo $i; ?>"><?php echo $i; ?></option>
+                                                    <?php }
+                                                    ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 p-2">
+                                            <select  class="btn border w-100 p-2 text-left dropdown-toggle" name="incubator_list">
+                                                <option value="0" selected="selected">Incubator Name</option>
+                                                <?php
+                                                $incubators = $this->data['incubators'];
+                                                for ($p = 0; $p < count($incubators); $p++) {
+                                                    ?><option value="<?php echo $incubators[$p]->ref_code; ?>" <?php if (@$_POST['incubator_list'] == $incubators[$p]->ref_code) { ?> selected="selected" <?php } ?>><?php echo $incubators[$p]->name; ?></option>  
+                                                <?php }
+                                                ?>
+                                            </select>
+
+                                        </div>
+
+                                        <div class="col-md-12 text-center p-2"><button class="button btn pt-2 pr-5 pb-2 pl-5" id="sbmtit">Submit</button></div>
+                                    </div>
+                                </div>
+
+
+                            </div></form>
+                        <style>
+
+
+                            tbody.collapse.in {
+                                display: table-row-group;
+                            }
+                        </style>
+
+                        <div style="margin-bottom:20px; font-family:monospace;">
+                            <button  data-toggle="modal" data-target="#exampleModalLong" class="au-btn au-btn-icon au-btn--green au-btn--small newJoinee" data-id="0"><i class="zmdi zmdi-accounts-add"></i> New Joined (<?php echo $this->data['newusers']; ?>)</button>
+                            <button class="au-btn au-btn-icon au-btn--red au-btn--small"><i class="zmdi zmdi-close"></i> Rejected (<?php echo $this->data['rejectedusers']; ?>)</button>                                    
+                        </div>                      
+               
+                        <div class="table-responsive table--no-card m-b-30 ">                        
+                            <div class="table table-borderless table-striped">
+                                <table id="table-1" class="db-table">
+                                    <div class="">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 20px;"></th>
+                                                <th style="width: 80px;">Creator</th>
+                                                <th style="width: 70px;">User ID</th>
+                                                <th style="width: 130px;">Bank details</th>
+                                                <th style="width: 90px;">Category</th>
+                                                <th style="width: 90px;">Talent</th>
+                                                <th style="width: 50px;">Posts</th>
+                                                <th style="width: 90px;">Profile</th>
+                                                <th style="width: 128px;">Bank docs</th>
+                                                <th style="width: 100px;">Bank det.</th>
+                                                <th style="width: 100px;">Comments</th>
+                                                <th style="width: 85px;">Assign</th>
+                                                <th style="width: 85px;">Followers</th>
+                                                <th style="width: 100px;">Avg V.V </th>
+                                                <th style="width: 100px;">Eng. Rate</th>
+                                                <th style="width: 100px;">Approval</th>
+                                                <th style="width: 100px;">Region</th>
+                                                <th style="width: 120px;">Incubator</th>
+                                                <th style="width: 80px;">Status</th> 
+                                            </tr>
+
+                                        </thead>
+                                        <?php
+                                        $task0 = $this->data['task0users'];
+                                        if (!empty($this->data['assignedtask'])) {
+                                            $assignedtask = $this->data['assignedtask'];
+                                        } else {
+                                            $assignedtask = array();
+                                        }
+
+                                        if (empty(count($task0))) {
+                                            ?>
+                                            <tbody>
+
+                                                <tr class="clickable" data-toggle="collapse"  aria-expanded="false" aria-controls="group-of-rows-Task0">
+                                                    <td colspan="19" style="text-align:center">No record found.</td>
+                                                </tr>
+                                            </tbody>  
+                                            <?php
+                                        } else {
+                                            ?>
+
+                                            <tbody>
+                                                <tr>
+                                                    <td colspan="19" class="clickable colcls" data-toggle="collapse" data-target="#group-of-rows-Task0" aria-expanded="false" aria-controls="group-of-rows-Task0"><i class="fa fa-plus" aria-hidden="true"></i> Complete List <?php echo "(" . count($task0) . ")"; ?></td>
+                                                </tr>
+                                            </tbody>
+                                            <tbody id="group-of-rows-Task0" class="collapse">
+                                                <?php
+                                                for ($k = 0; $k < count($task0); $k++) {
+                                                    ?>
+                                                    <tr>
+
+                                                        <td><?php if (in_array($this->session->userdata['role'], array(1, 3))) { ?>
+                                                                <a href="<?php echo base_url() . 'admin/edituserDetails?now=' . base64_encode($task0[$k]->user_id); ?>" target="_blank"> <i class="fa fa-pencil-square  fa-1x"></i></a></td> 
+                                                        <?php } else { ?>- 
+        <?php } ?>
+
+
+                                                        <td style="word-break: break-all;" userid="<?php echo $task0[$k]->user_id; ?>"><a href="<?php echo base_url() . 'admin/ViewuserDetails?now=' . base64_encode($task0[$k]->user_id); ?>" target="_blank"><?php echo $task0[$k]->name; ?></a><i class="glyphicon glyphicon-user"></i></td>
+                                                        <td><?php echo $task0[$k]->user_id; ?></td>
+                                                        <td>A/c - <?php echo $task0[$k]->account_number; ?> IFSC - <?php echo $task0[$k]->ifs_code; ?></td>
+                                                        <td><?php echo $task0[$k]->category; ?></td>
+                                                        <td><?php echo $task0[$k]->talent; ?></td>
+                                                        <td><?php echo $task0[$k]->posts; ?></td>
+                                                        <td>
+                                                            <?php
+                                                            $sql = "SELECT upp.platform,upp.url,p.platform FROM user_profile upp join platforms p on p.id=upp.platform WHERE upp.user_id=" . $task0[$k]->user_id;
+                                                            $query = $this->db->query($sql)->result();
+                                                            for ($j = 0; $j < count($query); $j++) {
+                                                                if (!empty($query[$j]->url)) {
+                                                                    ?>
+                                                                    <p><a href="<?php echo $query[$j]->url; ?>" target="_blank"><?php echo $query[$j]->platform; ?></a></p>
+                                                                    <?php
+                                                                }
+                                                            }
+                                                            ?>
+                                                        </td>
+
+                                                        <!--documents-->
+                                                        <td>
+                                                            <ul class="thumb">
+                                                                <li>
+                                                                    <?php if (empty($task0[$k]->cheque_image1)) { ?>
+                                                                        <img src="<?php
+                                                                             echo base_url('assets/images/no_photo_icon.jpg');
+                                                                             ?>" >    
+
+                                                                    <?php } else { ?>
+                                                                        <img src="<?php echo base_url('assets/images/2.jpg'); ?>" class="img-zoom" myOwnAttribute='<?php echo $task0[$k]->cheque_image1; ?>'>
+        <?php } ?>
+                                                                </li>
+                                                                <li>
+                                                                    <?php if (empty($task0[$k]->aadhar_image1)) { ?>
+                                                                        <img src="<?php
+                                                                             echo base_url('assets/images/no_photo_icon.jpg');
+                                                                             ?>" >    
+
+                                                                    <?php } else { ?>
+                                                                        <img src="<?php echo base_url('assets/images/1.jpg'); ?>" class="img-zoom" myOwnAttribute='<?php echo $task0[$k]->aadhar_image1; ?>'>
+        <?php } ?>
+                                                                </li>
+                                                                <li>
+                                                                    <?php if (empty($task0[$k]->pan_image1)) { ?>
+                                                                        <img src="<?php
+                                                                             echo base_url('assets/images/no_photo_icon.jpg');
+                                                                             ?>" >    
+
+                                                                    <?php } else { ?>
+                                                                        <img src="<?php echo base_url('assets/images/3.jpg'); ?>" class="img-zoom" myOwnAttribute='<?php echo $task0[$k]->pan_image1; ?>'>
+        <?php } ?>
+                                                                </li>
+                                                            </ul>
+                                                        </td><td>
+                                                            <?php
+                                                            $sql = "select status from users_bank_info where user_id=" . $task0[$k]->user_id;
+                                                            $query = $this->db->query($sql)->result();
+
+                                                            $bankstatus = empty($query[0]->status) ? 0 : $query[0]->status;
+                                                            ?>
+                                                            <div class="btn-group">
+                                                                <select  class="btn <?php if (empty($bankstatus) || $bankstatus == 6) { ?>btn-warning <?php } ?><?php if (($bankstatus == 2) || ($bankstatus == 7)) { ?> btn-danger <?php } ?><?php if ($bankstatus == 3) { ?> btn-success <?php } ?>  btn-sm dropdown-toggle bank_account_details" name="bank_account_details" id="bank_account_details" <?php if ($this->session->userdata['role'] != 1) { ?> disabled="disabled" <?php } ?> >
+                                                                    <option value="0" selected="selected">Bank Status</option>
+                                                                    <?php
+                                                                    for ($i = 0; $i < count($this->data['bankaccountstatus']); $i++) {
+                                                                        ?>
+                                                                        <option <?php if ($this->data['bankaccountstatus'][$i]->id == $bankstatus) { ?> selected="selected" <?php } ?> value="<?php echo $this->data['bankaccountstatus'][$i]->id; ?>"><?php echo $this->data['bankaccountstatus'][$i]->name; ?></option>
+                                                                    <?php }
+                                                                    ?>
+                                                                </select>
+                                                            </div>
+                                                        </td>
+                                                        <td applied_task_id="<?php echo $task0[$k]->applied_task_id; ?>">
+                                                            <?php
+                                                            $getcomment = "SELECT comment from applied_tasks where id=" . $task0[$k]->applied_task_id;
+                                                            $query = $this->db->query($getcomment)->result();
+                                                            $cmt = $query[0]->comment;
+                                                            ?>
+                                                            <div class="form-group">
+                                                                -
+                <!--                                                    <textarea class="form-control rounded-0" id="exampleFormControlTextarea2"  style="resize: none;" cols="50" rows="6"><?php echo $cmt; ?></textarea>-->
+                                                            </div>
+
+                                                        </td>
+                                                        <td><?php
+                                                            $usertaskmap = "SELECT task_id FROM applied_tasks WHERE user_id=" . $task0[$k]->user_id . " and has_approve!=2";
+                                                            $assignedtasks = $this->db->query($usertaskmap)->result();
+                                                            $taskarr = array();
+                                                            for ($a = 0; $a < count($assignedtasks); $a++) {
+                                                                $taskarr[] = $assignedtasks[$a]->task_id;
+                                                            }
+                                                            ?>
+                                                            <div class="btn-group">
+                                                                <button class="btn btn-danger btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Tasks</button>
+                                                                <div class="dropdown-menu">
+        <?php for ($n = 0; $n < count($this->data['tasklist']); $n++) { ?>
+                                                                        <div class="checkbox">
+                                                                            <label><input class="add-remove-tasks" type="checkbox" name="tasks[]" value="<?php echo $this->data['tasklist'][$n]->id; ?>" <?php if (in_array($this->data['tasklist'][$n]->id, $taskarr)) { ?> checked="checked" disabled="disabled" <?php } ?>> <?php echo $this->data['tasklist'][$n]->title; ?></label>
+                                                                        </div>
+        <?php } ?>
+
+                                                                    <div class="dropdown-divider"></div>
+                                                                    <button type="button" class="btn btn-default add-task">
+                                                                        Done
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td>1000</td><td>1500</td><td>2.2%</td>
+                                                        <!--button -->
+
+                                                        <td>
+                                                            <div class="btn-group">
+                                                                <select class="btn btn-success btn-sm dropdown-toggle account_approval_status" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="account_approval_status" disabled="disabled">
+                                                                    <option value="0" <?php if ($task0[$k]->account_status == 0) { ?> selected="selected" <?php } ?>>Update Account</option>
+                                                                    <option value="1" <?php if ($task0[$k]->account_status == 1) { ?> selected="selected" <?php } ?>>Approve</option>
+                                                                    <option value="2" <?php if ($task0[$k]->account_status == 2) { ?> selected="selected" <?php } ?>>Improve</option>
+                                                                    <option value="3" <?php if ($task0[$k]->account_status == 3) { ?> selected="selected" <?php } ?>>Reject</option>
+                                                                </select>
+
+
+                                                            </div>   
+                                                        </td>
+                                                        <td><?php echo $task0[$k]->state_name; ?></td>
+        <?php if ($this->session->userdata['role'] == 1) { ?> 
+                                                            <td>
+
+                                                                <div class="btn-group">
+                                                                    <select class="btn <?php if (empty($task0[$k]->ref_code)) { ?> btn-warning <?php } else { ?>btn-success <?php } ?> btn-sm dropdown-toggle incubator-name" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="incubator_name">
+                                                                        <option value="0">Incubator Name</option>
+                                                                        <?php
+                                                                        for ($p = 0; $p < count($incubators); $p++) {
+                                                                            ?><option value="<?php echo $incubators[$p]->ref_code; ?>" <?php if ($task0[$k]->ref_code == $incubators[$p]->ref_code) { ?> selected="selected" <?php } ?>><?php echo $incubators[$p]->name; ?></option>  
+                                                                        <?php }
+                                                                        ?>
+                                                                    </select>
+
+
+                                                                </div>
+
+                                                            </td>
+        <?php } else { ?><td><?php echo ucfirst($this->session->userdata['name']); ?></td><?php } ?>
+                                                        <td>-
+
+                                                            <?php
+                                                            /* if ($task0[$k]->account_status == 1) { ?>
+                                                              <span class="status--process">Approved</span> <?php } else { ?><span class="status--denied">Rejected</span>
+                                                              <?php } */
+                                                            ?>
+                                                        </td>
+
+                                                    </tr>
+    <?php } ?>
+
+                                            </tbody>
+                                            <?php
+                                            $alltasks = $this->data['appliedtask'];
+                                            for ($v = 0; $v < count($this->data['tasklist']); $v++) {
+                                                ?>
+                                                <tbody>
+                                                    <tr class="clickable" data-toggle="collapse" data-target="#group-of-rows-<?php echo $v; ?>" aria-expanded="false" aria-controls="group-of-rows-<?php echo $v; ?>">
+                                                        <?php
+                                                        if ($this->data['tasklist'][$v]->id == $this->data['appliedtaskcount'][0]['task_id']) {
+                                                            $appliedby = array_search($this->data['tasklist'][$v]->id, array_column($this->data['appliedtaskcount'], 'task_id'));
+                                                        } else {
+                                                            $key = (integer) array_search($this->data['tasklist'][$v]->id, array_column($this->data['appliedtaskcount'], 'task_id'));
+
+                                                            if ($key != 0) {
+                                                                $appliedby = $this->data['appliedtaskcount'][$key]['total'];
+                                                            } else {
+                                                                $appliedby = 0;
+                                                            }
+                                                        }
+                                                        ?>
+                                                        <td colspan="19" class="colcls"><i class="fa fa-plus" aria-hidden="true"></i> <?php
+                                                            echo $this->data['tasklist'][$v]->title;
+                                                            echo ' (' . $appliedby . ') ';
+                                                            ?></td>
+
+                                                    </tr>
+                                                </tbody>
+                                                <tbody id="group-of-rows-<?php echo $v; ?>" class="collapse">
+                                                    <?php
+                                                    for ($n = 0; $n < count($alltasks); $n++) {
+                                                        if ($this->data['tasklist'][$v]->id == $alltasks[$n]->task_id) {
+                                                            ?>
+
+                                                            <tr><?php if (in_array($this->session->userdata['role'], array(1, 3))) { ?>
+                                                                    <td taskid="<?php echo $alltasks[$n]->applied_task_id; ?>"><a href="<?php echo base_url() . 'admin/edituserDetails?now=' . base64_encode($alltasks[$n]->user_id); ?>" target="_blank"> <i class="fa fa-pencil-square  fa-1x"></i></a></td><?php } else { ?> 
+                                                                    <td>-</td><?php } ?>
+                                                                <td userid="<?php echo $alltasks[$n]->user_id; ?>"><a href="<?php echo base_url() . 'admin/ViewuserDetails?now=' . base64_encode($alltasks[$n]->user_id); ?>" target="_blank"><i class="glyphicon glyphicon-user"></i><?php echo $alltasks[$n]->name; ?></a></td>
+                                                                <td><?php echo $alltasks[$n]->user_id; ?></td>
+                                                                <td>A/c - <?php echo @$alltasks[$n]->account_number; ?> IFSC - <?php echo @$alltasks[$n]->ifs_code; ?></td>
+                                                                <td><?php echo $alltasks[$n]->category; ?></td>
+                                                                <td><?php echo $alltasks[$n]->talent; ?></td>
+                                                                <td>
+                                                                    <?php
+                                                                    $targetachievments = "SELECT concat(count(mw.id),'/',t.target) as requirments FROM tasks t left join my_work mw on mw.task_id=t.id  WHERE t.id=" . $alltasks[$n]->task_id . " and mw.user_id=" . $alltasks[$n]->user_id;
+                                                                    $query = $this->db->query($targetachievments)->result();
+                                                                    echo $query[0]->requirments;
+                                                                    ?> 
+
+                                                                </td>
+                                                                <td>
+                                                                    <?php
+                                                                    $sql = "SELECT upp.platform,upp.url,p.platform FROM user_profile upp join platforms p on p.id=upp.platform WHERE upp.user_id=" . $alltasks[$n]->user_id;
+                                                                    $query = $this->db->query($sql)->result();
+                                                                    for ($j = 0; $j < count($query); $j++) {
+                                                                        if (!empty($query[$j]->url)) {
+                                                                            ?>
+                                                                            <p><a href="<?php echo $query[$j]->url; ?>" target="_blank"><?php echo $query[$j]->platform; ?></a></p>
+                                                                            <?php
+                                                                        }
+                                                                    }
+                                                                    ?>
+                                                                </td>
+
+                                                                <!--documents-->
+                                                                <td>
+                                                                    <ul class="thumb">
+                                                                        <li>
+                                                                            <?php if (empty($alltasks[$n]->cheque_image1)) { ?>
+                                                                                <img src="<?php
+                                                                                     echo base_url('assets/images/no_photo_icon.jpg');
+                                                                                     ?>" >    
+
+                                                                            <?php } else { ?>
+                                                                                <img src="<?php echo base_url('assets/images/2.jpg'); ?>" class="img-zoom" myOwnAttribute='<?php echo $alltasks[$n]->cheque_image1; ?>'>
+                <?php } ?>
+                                                                        </li>
+                                                                        <li>
+                                                                            <?php if (empty($alltasks[$n]->aadhar_image1)) { ?>
+                                                                                <img src="<?php
+                                                                                     echo base_url('assets/images/no_photo_icon.jpg');
+                                                                                     ?>" >    
+
+                                                                            <?php } else { ?>
+                                                                                <img src="<?php echo base_url('assets/images/1.jpg'); ?>" class="img-zoom" myOwnAttribute='<?php echo $alltasks[$n]->aadhar_image1; ?>'>
+                <?php } ?>
+                                                                        </li>
+                                                                        <li>
+                                                                            <?php if (empty($alltasks[$n]->pan_image1)) { ?>
+                                                                                <img src="<?php
+                                                                                     echo base_url('assets/images/no_photo_icon.jpg');
+                                                                                     ?>" >    
+
+                                                                            <?php } else { ?>
+                                                                                <img src="<?php echo base_url('assets/images/3.jpg'); ?>" class="img-zoom" myOwnAttribute='<?php echo $alltasks[$n]->pan_image1; ?>'>
+                <?php } ?>
+                                                                        </li>
+                                                                    </ul>
+                                                                </td>
+                                                                <!--Bank button -->
+                                                                <td><?php
+                                                                    $sql = "select status from users_bank_info where user_id=" . $alltasks[$n]->user_id;
+                                                                    $query = $this->db->query($sql)->result();
+
+                                                                    $bankstatus = empty($query[0]->status) ? 0 : $query[0]->status;
+                                                                    ?>
+                                                                    <div class="btn-group">
+                                                                        <select  class="btn <?php if (empty($bankstatus) || $bankstatus == 6) { ?>btn-warning <?php } ?><?php if (($bankstatus == 2) || ($bankstatus == 7)) { ?> btn-danger <?php } ?><?php if ($bankstatus == 3) { ?> btn-success <?php } ?> btn-sm dropdown-toggle bank_account_details" name="bank_account_details" id="bank_account_details" <?php if ($this->session->userdata['role'] != 1) { ?> disabled="disabled" <?php } ?> >
+                                                                            <option value="0" selected="selected">Bank Account Status</option>
+                                                                            <?php
+                                                                            for ($i = 0; $i < count($this->data['bankaccountstatus']); $i++) {
+                                                                                ?>
+                                                                                <option value="<?php echo $this->data['bankaccountstatus'][$i]->id; ?>"  <?php if ($this->data['bankaccountstatus'][$i]->id == $bankstatus) { ?> selected="selected" <?php } ?> ><?php echo $this->data['bankaccountstatus'][$i]->name; ?></option>
+                                                                            <?php }
+                                                                            ?>
+                                                                        </select>
+                                                                    </div>
+                                                                </td>
+                                                                <td><?php
+                                                                    $sql = "select comment from applied_tasks where id=" . $alltasks[$n]->applied_task_id;
+                                                                    $query = $this->db->query($sql)->result();
+                                                                    $comment = $query[0]->comment;
+                                                                    ?>
+                                                                    <div class="form-group">
+                                                                        <textarea class="form-control rounded-0 admin-comment" id="exampleFormControlTextarea3"  style="resize: none;" cols="50" rows="6" ><?php echo $comment; ?></textarea>
+                                                                    </div>
+                                                                </td>
+                                                                <td>NA</td>
+                                                                <td>TD 1</td><td>td 2</td><td>td 3</td>
+                                                                <td>
+
+                                                                    <div class="btn-group">
+                <?php if (in_array($this->session->userdata['role'], array(2, 3))) { ?>
+                                                                            <select class="btn <?php if (empty($alltasks[$n]->has_approve)) { ?> btn-info <?php } ?><?php if ($alltasks[$n]->has_approve == "1") { ?>btn-success <?php } ?><?php if ($alltasks[$n]->has_approve == "2") { ?>btn-warning <?php } ?> <?php if ($alltasks[$n]->has_approve == "3") { ?>btn-danger <?php } ?> btn-sm dropdown-toggle task-approval" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" <?php if (in_array($alltasks[$n]->task_id, $assignedtask)) { ?> <?php } else { ?> disabled="disabled" <?php } ?> ><option value="0">Update Account</option>
+                                                                                <option value="1" <?php if ($alltasks[$n]->has_approve == "1") { ?> selected="selected" <?php } ?>>Approve</option>
+                                                                                <option value="2" <?php if ($alltasks[$n]->has_approve == "2") { ?> selected="selected" <?php } ?>>Improve</option>
+                                                                                <option value="3" <?php if ($alltasks[$n]->has_approve == "3") { ?> selected="selected" <?php } ?>>Reject</option>
+                                                                            </select>
+                <?php } else { ?>
+                                                                            <select class="btn <?php if (empty($alltasks[$n]->has_approve)) { ?> btn-info <?php } ?><?php if ($alltasks[$n]->has_approve == "1") { ?>btn-success <?php } ?><?php if ($alltasks[$n]->has_approve == "2") { ?>btn-warning <?php } ?> <?php if ($alltasks[$n]->has_approve == "3") { ?>btn-danger <?php } ?> btn-sm dropdown-toggle task-approval" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><option value="0">Update Account</option>
+                                                                                <option value="1" <?php if ($alltasks[$n]->has_approve == "1") { ?> selected="selected" <?php } ?>>Approve</option>
+                                                                                <option value="2" <?php if ($alltasks[$n]->has_approve == "2") { ?> selected="selected" <?php } ?>>Improve</option>
+                                                                                <option value="3" <?php if ($alltasks[$n]->has_approve == "3") { ?> selected="selected" <?php } ?>>Reject</option>
+                                                                            </select>
+                <?php } ?>
+                                                                    </div>
+                                                                </td>
+
+                                                                <td><?php echo $alltasks[$n]->state_name; ?></td>
+
+                <?php if ($this->session->userdata['role'] == 1) { ?>  <td>
+                                                                        <div class="btn-group">
+                                                                            <select class="btn <?php if (empty($alltasks[$n]->ref_code)) { ?> btn-warning <?php } else { ?>btn-success <?php } ?> btn-sm dropdown-toggle incubator-name" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="incubator_name" name="incubator_name">
+                                                                                <option value="0">Incubator Name</option>
+                                                                                <?php
+                                                                                for ($p = 0; $p < count($incubators); $p++) {
+                                                                                    ?><option value="<?php echo $incubators[$p]->ref_code; ?>" <?php if ($alltasks[$n]->ref_code == $incubators[$p]->ref_code) { ?> selected="selected" <?php } ?>><?php echo $incubators[$p]->name; ?></option>  
+                                                                                <?php }
+                                                                                ?>
+                                                                            </select>
+
+
+                                                                        </div>
+                                                                    </td> </td>
+                <?php } else { ?><td><?php echo ucfirst($this->session->userdata['name']); ?></td><?php } ?>
+                                                                <td>
+
+                                                                    <?php if (empty($alltasks[$n]->has_approve)) { ?><span class="status--denied">Waiting for approval<?php } ?></span>
+                                                                    <?php if ($alltasks[$n]->has_approve == "1") { ?><span class="status--process">Approve <?php } ?></span>
+                                                                    <?php if ($alltasks[$n]->has_approve == "2") { ?><span class="status--denied">Improve <?php } ?></span>
+                <?php if ($alltasks[$n]->has_approve == "3") { ?><span class="status--denied">Rejected <?php } ?></span>
+                                                                </td>
+
+                                                            </tr>
+                                                            <?php
+                                                        }
+                                                    }
+                                                    ?>
+
+
+                                                </tbody>
+    <?php } ?>
+
+                                            </tbody>
+
+
+                                            </tbody>
+                                    </table>
+                                    <div id="header-fixed"><table id="table-header-fixed" class="db-table"></table></div>
+<?php } ?>
+
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div></section>
+
+
+        <!-- Jquery JS-->
+        <script rel="dns-prefetch" src="<?php echo base_url(); ?>assets/vendor/jquery-3.2.1.min.js"></script>
+        <!-- Bootstrap JS-->
+        <script rel="dns-prefetch" src="<?php echo base_url(); ?>assets/vendor/bootstrap-4.1/popper.min.js"></script>
+        <script rel="dns-prefetch" src="<?php echo base_url(); ?>assets/vendor/bootstrap-4.1/bootstrap.min.js"></script>
+        <!-- Vendor JS       -->
+        <!--<script src="<?php echo base_url(); ?>assets/vendor/slick/slick.min.js">-->
+        <script rel="dns-prefetch" src="<?php echo base_url(); ?>assets/vendor/select2/select2.min.js"></script>
+
+        <!-- Zoom JS-->
+        <script rel="dns-prefetch" src="<?php echo base_url(); ?>assets/js/zoom.js"></script> 
+
+        <script type="text/javascript" rel="dns-prefetch" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+        <script type="text/javascript" rel="dns-prefetch" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+        <link rel="stylesheet" type="text/css" rel="dns-prefetch" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+
+
+
+
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.13/datatables.min.css"/>
+
+        <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.13/datatables.min.js"></script>
+
+        <script type="text/javascript" src="https://cdn.datatables.net/1.10.13/js/dataTables.bootstrap.min.js"></script>
+        <!-- Datefilter JS-->
+        <script src="<?php echo base_url(); ?>assets/js/datefilter.js"></script>
+
+        <!-- Main JS-->
+        <!--<script src="<?php echo base_url(); ?>assets/js/main.js"></script>-->
+
+    </body>
+
+</html>
+<script>
+    $(document).ready(function () {
+    var state_id = $('#state').val();
+    var city_id =$('#city_value').val();
+    populate_state(state_id,city_id);
+    if (($('#inputDateText').val() != "") && ($('#inputDate').val() != ""))
+    { 
+    var res = $('#inputDate').val();
+    var dts = res.split(" - ");
+    var dt1 = String(dts[0]);
+    var dt2 = String(dts[1]);
+    var inputstartdate = moment(dt1, "MM-DD-YYYY");
+    var inputenddate = moment(dt2, "MM-DD-YYYY");
+    $('.drp-selected').html($('#inputDate').val());
+    $('#reportrange').daterangepicker({
+    startDate: inputstartdate,
+    endDate: inputenddate
+
+    });
+    $("#reportrange  > span").text($('#inputDateText').val());
+
+    }
+
+    var taskids = [];
+    $('#state').change(function () {
+    var state_id = $('#state').val();
+    populate_state(state_id,0);
+
+    });
+    $('.bank_account_details').change(function () {
+
+    var status = $(this).val();
+    var user_id = $(this).parents('tr').find('td[userid]').attr("userid");
+    var $this = $(this);
+    if (status == "0")
+    {
+    alert("select a valid option");
+    return false;
+    }
+    if (user_id != '')
+    {
+    $.ajax({
+    url: "<?php echo base_url(); ?>Admin/updatebankdetails",
+    data: {user_id: user_id, status: status},
+    type: "POST",
+    dataType: "json",
+    async: true,
+    success: function (data) {
+
+    if (data.status == true) {
+
+    alert("Bank account details updated.");
+    if (status == 3) {
+    $this.removeClass().addClass('btn btn-success btn-sm dropdown-toggle');
+    }
+    if (status == 7) {
+    $this.removeClass().addClass('btn btn-danger btn-sm dropdown-toggle');
+    }
+    } else {
+    alert("Bank details not found..!");
+
+    return false;
+    }
+    }
+    });
+
+    }
+
+    });
+    $('.account_approval_status').change(function () {
+    var user_id = $(this).parents('tr').find('td[userid]').attr("userid");
+    var applied_task_id = $(this).parents('tr').find('td[applied_task_id]').attr("applied_task_id");
+    var comment = $(this).parents('tr').find($('textarea#exampleFormControlTextarea2')).val();
+    var status = $(this).val();
+    if (user_id != '')
+    {
+    $.ajax({
+    url: "<?php echo base_url(); ?>Admin/updatetaskzero",
+    data: {user_id: user_id, comment: comment, status: status, applied_task_id: applied_task_id},
+    type: "POST",
+    dataType: "json",
+    success: function (data) {
+
+    if (data == true) {
+    taskids = [];
+    user_id = '';
+    alert("Task updated successfully");
+    }
+    }
+    });
+    }
+
+    });
+    $('.add-task').click(function () {
+    var user_id = $(this).parents('tr').find('td[userid]').attr("userid");
+    if (user_id != '')
+    {
+    $.ajax({
+    url: "<?php echo base_url(); ?>Admin/updatetask",
+    data: {user_id: user_id, taskids: taskids},
+    type: "POST",
+    dataType: "json",
+    success: function (data) {
+
+    if (data == true) {
+    taskids = [];
+    user_id = '';
+    alert("Task assigned successfully");
+    }
+    }
+    });
+    }
+    });
+    $('.add-remove-tasks').click(function () {
+    taskids.push($(this).val());
+    });
+    $('.task-approval').change(function () {
+    var status = $(this).val();
+    if (status == 0) {
+    alert("select a valid option");
+    return false;
+    }
+    var taskid = $(this).parents('tr').find('td[taskid]').attr("taskid");
+    var comment = $(this).parents('tr').find($('textarea#exampleFormControlTextarea3')).val();
+    $.ajax({
+    url: "<?php echo base_url(); ?>Admin/updatetaskwithcomment",
+    data: {status: status, taskid: taskid, comment: comment},
+    type: "POST",
+    dataType: "json",
+    success: function (data) {
+
+    if (data == true) {
+    alert("Task updated successfully");
+    }
+    }
+
+    });
+    if (status == 1) {
+    $(this).removeClass();
+    $(this).addClass('btn btn-success btn-sm dropdown-toggle task-approval');
+    $(this).parents('tr').find('td').eq(13).addClass('status--process').text('Approved');
+    }
+    if (status == 2) {
+    $(this).removeClass();
+    $(this).addClass('btn btn-warning btn-sm dropdown-toggle task-approval');
+    $(this).parents('tr').find('td').eq(13).addClass('status--denied').text('Improve');
+    }
+    if (status == 3) {
+    $(this).removeClass();
+    $(this).addClass('btn btn-danger btn-sm dropdown-toggle task-approval');
+    $(this).parents('tr').find('td').eq(13).addClass('status--denied').text('Rejected');
+    }
+
+    });
+    $('#sbmtit').click(function () {
+    if ($('.drp-selected').html() != "")
+    {
+    $('#inputDate').val($('.drp-selected').html());
+    }
+
+    $('#inputDateText').val($("#reportrange  > span").text());
+    return true;
+    });
+    $('.fa-power-off').click(function () {
+    location.href = "<?php echo base_url('profile/logout') ?>";
+    });
+    $(document).on('click', '.applyBtn', function () {
+
+    var res = $('.drp-selected').html();
+    var dts1 = res.split(" - ");
+    var dt3 = String(dts1[0]);
+    var dt4 = String(dts1[1]);
+    var inputstartdate = moment(dt3).format('MMM DD, YYYY');
+    var inputenddate = moment(dt4).format('MMM DD, YYYY');
+    var temp = inputstartdate + " - " + inputenddate;
+    $("#reportrange  > span").html(temp);
+    });
+    $(document).on('click', '.colcls', function () {
+    var cucls = $(this).closest("td").find(".fa").attr("class");
+    if (cucls == "fa fa-plus") {
+    $(this).closest("td").find(".fa").removeClass('fa-plus').addClass('fa-minus');
+    }
+    else {
+    $(this).closest("td").find(".fa").removeClass('fa-minus').addClass('fa-plus');
+    }
+    });
+    $(document).on("mouseover", '.img-zoom', function () {
+    var loader_image = "<?php echo base_url() . 'assets/page_load.gif'; ?>";
+    this.src = loader_image;
+    var image = $(this);
+    var org_img= $(this).attr('myOwnAttribute');
+    $.ajax({
+    type:'get',
+    url: 'getimage',
+    data:{query: org_img},
+    dataType:'json',
+    async: false,
+    success:function(d){
+    image.attr('src', d);
+    },
+    beforeSend: function(){
+    },
+    complete: function(){
+    }
+    });
+
+    }); 
+    $('.incubator-name').change(function () {
+    var user_id = $(this).parents('tr').find('td[userid]').attr("userid");
+    var ref_code = $(this).val();
+    var $this = $(this);
+    if (ref_code != '')
+    {
+    $.ajax({
+    url: "<?php echo base_url(); ?>Admin/updateincubators",
+    data: {user_id: user_id, ref_code: ref_code},
+    type: "get",
+    dataType: "json",
+    success: function (data) {
+
+    if (data == true) {
+    ref_code ='';
+    user_id = '';
+    alert("User Assigned to Incubator successfully");
+    $this.removeClass().addClass('btn btn-success btn-sm dropdown-toggle');
+    }
+    }
+    });
+    }
+
+    });
+    function populate_state(state_id,city_id)
+    {
+
+    if (state_id != '')
+    { 
+    $.ajax({
+    url: "<?php echo base_url(); ?>Admin/fetchcity",
+    data: {state_id: state_id},
+    type: "POST",
+    dataType: "json",
+    success: function (data) {
+    $('#city').empty();
+    $('#city').append('<option value="">Select City</option>');
+    $.each(data, function (key, value) {
+    $('#city').append('<option value="' + value.city_id + '">' + value.city_name + '</option>');
+    if(value.city_id==city_id)
+    {
+    $('#city').val(city_id);  
+    }
+    });
+    }
+    });
+
+    }  
+
+
+    }
+
+    $(document).on("click",".newJoinee",function() {
+    var id = $(this).data('id');
+    if ( $.fn.DataTable.isDataTable('#item-list') ) {
+    $('#item-list').DataTable().destroy();
+    }
+    $('#item-list').css("display", "block");
+    $('#item-list tbody').empty();
+    $('#item-list').DataTable({
+    "ajax": {
+
+    url : "<?php echo base_url('Admin/getUsers/'); ?>",
+    type : 'GET',
+    data: { 
+    'status': id
+    }
+
+    },
+
+    });
+    });
+    $(document).on('change', '.update-value', function(){
+    var element = $("option:selected", this);
+    var userid = element.attr("data-code");
+    var userstatus = $(this).val();
+
+    $.post("<?php echo base_url('Admin/updateUser/'); ?>",
+    {
+    "userid": userid,
+    "userstatus": userstatus
+    },
+    function(data, status){
+
+    });
+
+    });
+    });
+
+</script>
+<div class="modal fade" id="exampleModalLong" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">New Users</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <table id="item-list" style="display:none;" class="table table-bordered table-striped table-hover">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Chamko ID</th>
+
+                            <th>Name</th>
+
+                            <th>Mobile Number</th>
+                            <th>State</th>
+                            <th>Action</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+
+<!-- end document-->
