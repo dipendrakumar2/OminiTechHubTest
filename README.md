@@ -15,8 +15,8 @@ run command php artisan read:calculatefactorial 6 to check
  2 - Write a program to give the factorial of any number. 
  
 Note:- 
-1. I used laravel framework command line utility.
-2. My coding is little differnt from https://github.com/javadevcowan/phptest
+1. I used Laravel framework command line utility.
+2. My coding is little different from https://github.com/javadevcowan/phptest
 Since it is in core PHP.
 3. I used to build-In command line funtion opendir and readdir. 
 
