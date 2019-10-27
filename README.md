@@ -12,5 +12,5 @@ Note:-
 1. I used laravel framework command line utility.
 2. My coding is little differnt from https://github.com/javadevcowan/phptest
 Since it is in core PHP.
-3. I used to build-In command line funtion opendir and readdir.
+3. I used to build-In command line funtion opendir and readdir. 
 
